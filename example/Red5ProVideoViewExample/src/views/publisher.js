@@ -3,7 +3,6 @@ import React from 'react'
 import {
   AppState,
   findNodeHandle,
-  Button,
   SafeAreaView,
   StyleSheet,
   Text,
@@ -11,13 +10,15 @@ import {
   View
 } from 'react-native'
 import { Icon } from 'react-native-elements'
+import AsyncStorage from '@react-native-community/async-storage'
 import {
   R5VideoView,
   publish,
   unpublish,
   swapCamera,
   muteAudio, unmuteAudio,
-  muteVideo, unmuteVideo
+  muteVideo, unmuteVideo,
+  enableAutoFocus
 } from 'react-native-red5pro'
 
 const styles = StyleSheet.create({
@@ -249,7 +250,16 @@ export default class Publisher extends React.Component {
     console.log(`Publisher:onMetadata :: ${event.nativeEvent.metadata}`)
   }
 
-  onConfigured (event) {
+  async getFeaturesConfigs() {
+    try {
+      const jsonData = await AsyncStorage.getItem('@features_config')
+      return jsonData != null ? JSON.parse(jsonData) : null
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  async onConfigured (event) {
     const {
       streamProps: {
         configuration: {
@@ -260,6 +270,13 @@ export default class Publisher extends React.Component {
 
     console.log(`Publisher:onConfigured :: ${event.nativeEvent.key}`)
     publish(findNodeHandle(this.red5pro_video_publisher), streamName)
+
+    const featureConfigs = await this.getFeaturesConfigs()
+
+    if (featureConfigs?.autoFocusEnabled) {
+      console.log('Publisher:enableAutoFocus()')
+      enableAutoFocus(findNodeHandle(this.red5pro_video_publisher))
+    }
   }
 
   onPublisherStreamStatus (event) {
