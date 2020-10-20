@@ -250,9 +250,9 @@ export default class Publisher extends React.Component {
     console.log(`Publisher:onMetadata :: ${event.nativeEvent.metadata}`)
   }
 
-  async getFeaturesConfigs() {
+  async getSettings() {
     try {
-      const jsonData = await AsyncStorage.getItem('@features_config')
+      const jsonData = await AsyncStorage.getItem('@settings')
       return jsonData != null ? JSON.parse(jsonData) : null
     } catch (error) {
       console.log(error)
@@ -271,9 +271,9 @@ export default class Publisher extends React.Component {
     console.log(`Publisher:onConfigured :: ${event.nativeEvent.key}`)
     publish(findNodeHandle(this.red5pro_video_publisher), streamName)
 
-    const featureConfigs = await this.getFeaturesConfigs()
+    const settings = await this.getSettings()
 
-    if (featureConfigs?.autoFocusEnabled) {
+    if (settings?.autoFocusEnabled) {
       console.log('Publisher:enableAutoFocus()')
       enableAutoFocus(findNodeHandle(this.red5pro_video_publisher))
     }
