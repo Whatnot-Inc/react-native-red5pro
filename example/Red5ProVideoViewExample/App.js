@@ -23,7 +23,7 @@ import { Icon } from 'react-native-elements'
 
 import Publisher from './src/views/publisher'
 import Subscriber from './src/views/subscriber'
-import Features from './src/views/features'
+import Settings from './src/views/settings'
 
 export default class App extends React.Component {
   constructor (props) {
@@ -42,8 +42,8 @@ export default class App extends React.Component {
     this.onUseAuthenticationChange = this.onUseAuthenticationChange.bind(this)
     this.onUsernameChange = this.onUsernameChange.bind(this)
     this.onPasswordChange = this.onPasswordChange.bind(this)
-    this.openFeaturesConfig = this.openFeaturesConfig.bind(this)
-    this.closeFeaturesConfig = this.closeFeaturesConfig.bind(this)
+    this.openSettings = this.openSettings.bind(this)
+    this.closeSettings = this.closeSettings.bind(this)
 
     // Props.
     this.state = {
@@ -52,7 +52,7 @@ export default class App extends React.Component {
       isPublisher: false,
       useAuthentication: false,
       isInErrorState: false,
-      configFeatures: false,
+      settingsScreenOpened: false,
 
       hostFieldProps: {
         placeholder: 'Host',
@@ -180,11 +180,11 @@ export default class App extends React.Component {
         )
       }
     }
-    else if (!this.state.hasStarted && this.state.configFeatures) {
+    else if (!this.state.hasStarted && this.state.settingsScreenOpened) {
       return (
-        <Features 
+        <Settings 
           style={styles.container} 
-          onClose={this.closeFeaturesConfig}
+          onClose={this.closeSettings}
         />
       )
     }
@@ -257,7 +257,7 @@ export default class App extends React.Component {
           }
           <TouchableOpacity 
             style={{alignSelf: 'center', marginTop: 50, flexDirection: 'row', alignItems: 'center'}}
-            onPress={this.openFeaturesConfig}
+            onPress={this.openSettings}
           >
             <Icon
               name='settings'
@@ -265,22 +265,22 @@ export default class App extends React.Component {
               color='#2196F3'
               size={20}
             />
-            <Text style={{color: '#2196F3', fontSize: 16, marginLeft: 5}}>Features</Text>
+            <Text style={{color: '#2196F3', fontSize: 16, marginLeft: 5}}>Settings</Text>
           </TouchableOpacity>
         </View>
       )
     }
   }
 
-  openFeaturesConfig () {
+  openSettings () {
     this.setState({
-      configFeatures: true
+      settingsScreenOpened: true
     })
   }
 
-  closeFeaturesConfig () {
+  closeSettings () {
     this.setState({
-      configFeatures: false
+      settingsScreenOpened: false
     })
   }
 

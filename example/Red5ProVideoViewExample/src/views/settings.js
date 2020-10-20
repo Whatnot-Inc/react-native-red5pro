@@ -37,7 +37,7 @@ const styles = StyleSheet.create({
   }
 })
 
-export default function Features(props) {
+export default function Settings(props) {
   const [state, setState] = useState({
     autoFocusEnabled: false,
     autoReconnectEnabled: false
@@ -55,7 +55,7 @@ export default function Features(props) {
     try {
       const json = JSON.stringify(state)
 
-      await AsyncStorage.setItem('@features_config', json)
+      await AsyncStorage.setItem('@settings', json)
 
     } catch (error) {
       console.log(error)
@@ -64,7 +64,7 @@ export default function Features(props) {
   
   const getData = async () => {
     try {
-      const jsonData = await AsyncStorage.getItem('@features_config')
+      const jsonData = await AsyncStorage.getItem('@settings')
 
       if (jsonData != null) {
         const parsedData = JSON.parse(jsonData)
@@ -107,22 +107,23 @@ export default function Features(props) {
           />
         </TouchableOpacity>
         <Text
-          style={{color: '#2196F3', fontSize: 18, marginLeft: 15}}
+          style={{color: '#2196F3', fontSize: 20, marginLeft: 15}}
         >
-          Features Configuration
+          Settings
         </Text>
         <View style={{width: 24}} />
       </View>
       <View style={styles.subcontainer}>
         <View style={styles.switchContainer}>
-          <Text style={styles.switchLabel}>Auto-focus</Text>
+          <Text style={styles.switchLabel}>Enable auto-focus</Text>
           <Switch
+            colo
             value={state.autoFocusEnabled}
             onValueChange={toggleAutoFocus}
           />
         </View>
         <View style={styles.switchContainer}>
-          <Text style={styles.switchLabel}>Auto-reconnect</Text>
+          <Text style={styles.switchLabel}>Enable auto-reconnect</Text>
           <Switch
             disabled
             value={state.autoReconnectEnabled}
