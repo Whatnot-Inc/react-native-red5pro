@@ -374,6 +374,19 @@ public class R5StreamSubscriber implements R5StreamInstance,
 
 	}
 
+	public R5Stream.R5Stats getSreamStats() {
+
+		if (mStream != null) {
+			Log.d(TAG, "getStreamStats()");
+			R5Stream.R5Stats stats = mStream.getStats();
+			return stats;
+		}
+
+		Log.d(TAG, "getStreamStats() : Could not get stats from R5Stream instance");
+		return null;
+
+	}
+
 	@Override
 	public void onConnectionEvent(R5ConnectionEvent event) {
 

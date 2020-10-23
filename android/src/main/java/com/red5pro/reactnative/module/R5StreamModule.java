@@ -2,11 +2,14 @@ package com.red5pro.reactnative.module;
 
 import android.util.Log;
 
+import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
+import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.bridge.WritableNativeMap;
 import com.red5pro.reactnative.stream.R5StreamInstance;
 import com.red5pro.reactnative.stream.R5StreamProps;
 import com.red5pro.reactnative.stream.R5StreamPublisher;
@@ -17,6 +20,10 @@ import com.red5pro.streaming.R5Stream;
 import com.red5pro.streaming.R5StreamProtocol;
 import com.red5pro.streaming.config.R5Configuration;
 
+import org.json.JSONObject;
+
+import java.security.Key;
+import java.util.Dictionary;
 import java.util.Map;
 import java.util.HashMap;
 
@@ -235,6 +242,60 @@ public class R5StreamModule extends ReactContextBaseJavaModule {
 			}
 		}
 		Log.d(TAG, "Could not unmute video on broadcast. Stream :id(" + streamId + ") not found.");
+	}
+
+	@ReactMethod
+	public void getStreamStats(String streamId, Callback callback) {
+
+		Log.d(TAG, "getStreamStats:id(" + streamId + ")");
+		R5StreamItem item = streamMap.get(streamId);
+		R5StreamInstance instance = this.getStreamInstance(streamId);
+
+		if (instance != null) {
+			if (instance instanceof R5StreamPublisher) {
+				R5Stream.R5Stats stats = ((R5StreamPublisher) item.getInstance()).getSreamStats();
+				callback.invoke(this.mapStreamStats(stats));
+				return;
+			}
+			else if (instance instanceof R5StreamSubscriber) {
+				R5Stream.R5Stats stats = ((R5StreamSubscriber) item.getInstance()).getSreamStats();
+				callback.invoke(this.mapStreamStats(stats));
+				return;
+			}
+		}
+
+		Log.d(TAG, "Could not get stream stats. Stream :id(" + streamId + ") not found.");
+		callback.invoke(new WritableNativeMap() {
+			{
+				putString("error", "No stream instance found");
+			}
+		});
+
+	}
+
+	public WritableMap mapStreamStats (R5Stream.R5Stats stats) {
+		WritableMap result = new WritableNativeMap();
+		if (stats != null) {
+			result.putDouble("buffered_time", stats.buffered_time);
+			result.putInt("subscribe_queue_size", stats.subscribe_queue_size);
+			result.putInt("nb_audio_frames", stats.nb_audio_frames);
+			result.putInt("nb_video_frames", stats.nb_video_frames);
+			result.putDouble("pkts_received", stats.pkts_received);
+			result.putDouble("pkts_sent", stats.pkts_sent);
+			result.putDouble("pkts_video_dropped", stats.pkts_video_dropped);
+			result.putDouble("pkts_audio_dropped", stats.pkts_audio_dropped);
+			result.putDouble("publish_pkts_dropped", stats.publish_pkts_dropped);
+			result.putDouble("total_bytes_received", stats.total_bytes_received);
+			result.putDouble("total_bytes_sent", stats.total_bytes_sent);
+			result.putDouble("subscribe_bitrate", stats.subscribe_bitrate);
+			result.putDouble("publish_bitrate", stats.publish_bitrate);
+			result.putDouble("socket_queue_size", stats.socket_queue_size);
+			result.putDouble("bitrate_sent_smoothed", stats.bitrate_sent_smoothed);
+			result.putDouble("bitrate_received_smoothed", stats.bitrate_received_smoothed);
+			result.putDouble("subscribe_latency", stats.subscribe_latency);
+			result.putDouble("video_decode_smoothed", stats.video_decode_smoothed);
+		}
+		return result;
 	}
 
 	public R5StreamInstance getStreamInstance (String streamId) {

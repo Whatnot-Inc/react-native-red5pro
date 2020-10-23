@@ -32,6 +32,8 @@ import com.red5pro.streaming.source.R5Camera;
 import com.red5pro.streaming.source.R5Microphone;
 import com.red5pro.streaming.view.R5VideoView;
 
+import java.util.Map;
+
 public class R5StreamPublisher implements R5StreamInstance,
 		PublishService.PublishServicable {
 
@@ -710,6 +712,19 @@ public class R5StreamPublisher implements R5StreamInstance,
 		WritableMap map = new WritableNativeMap();
 		map.putString("metadata", metadata);
 		this.emitEvent(R5StreamSubscriber.Events.METADATA.toString(), map);
+
+	}
+
+	public R5Stream.R5Stats getSreamStats() {
+
+		if (mStream != null) {
+			Log.d(TAG, "getStreamStats()");
+			R5Stream.R5Stats stats = mStream.getStats();
+			return stats;
+		}
+
+		Log.d(TAG, "getStreamStats() : Could not get stats from R5Stream instance");
+		return null;
 
 	}
 
