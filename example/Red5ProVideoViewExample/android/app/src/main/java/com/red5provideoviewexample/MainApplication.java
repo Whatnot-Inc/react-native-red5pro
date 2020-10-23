@@ -12,6 +12,7 @@ import com.facebook.soloader.SoLoader;
 import com.reactnativecommunity.rnpermissions.RNPermissionsPackage;
 import com.reactnativecommunity.asyncstorage.AsyncStoragePackage;
 
+import com.rnfs.RNFSPackage;
 import com.red5pro.reactnative.R5Package;
 
 import java.util.Arrays;
@@ -32,6 +33,7 @@ public class MainApplication extends Application implements ReactApplication {
           new VectorIconsPackage(),
           new RNPermissionsPackage(),
           new AsyncStoragePackage(),
+          new RNFSPackage(),
           new R5Package()
       );
     }

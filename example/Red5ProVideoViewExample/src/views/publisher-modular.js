@@ -19,6 +19,7 @@ import {
   attach, detach
 } from 'react-native-red5pro'
 import AsyncStorage from '@react-native-community/async-storage'
+import RNFS from 'react-native-fs'
 
 const styles = StyleSheet.create({
   container: {
@@ -122,6 +123,8 @@ export default class Publisher extends React.Component {
     this.doDetach = this.doDetach.bind(this)
     this.doPublish = this.doPublish.bind(this)
     this.doUnpublish = this.doUnpublish.bind(this)
+    this.getStreamStats = this.getStreamStats.bind(this)
+    this.printStatsToFile = this.printStatsToFile.bind(this)
 
     this.state = {
       appState: AppState.currentState,
@@ -130,6 +133,7 @@ export default class Publisher extends React.Component {
       videoMuted: false,
       swappedLayout: false,
       attached: true,
+      logIntervalId: null,
       buttonProps: {
         style: styles.button
       },
@@ -177,6 +181,9 @@ export default class Publisher extends React.Component {
     this.emitter.addListener('onConfigured', this.onConfigured)
     this.emitter.addListener('onPublisherStreamStatus', this.onPublisherStreamStatus)
     this.emitter.addListener('onUnpublishNotification', this.onUnpublishNotification)
+  
+    const intervalId = setInterval(this.getStreamStats, 5000)
+    this.setState({ logIntervalId: intervalId })
   }
 
   componentWillUnmount () {
@@ -187,6 +194,8 @@ export default class Publisher extends React.Component {
     this.emitter.removeAllListeners('onConfigured')
     this.emitter.removeAllListeners('onPublisherStreamStatus')
     this.emitter.removeAllListeners('onUnpublishNotification')
+
+    clearInterval(this.state.logIntervalId)
   }
 
   componentDidUpdate (prevProps, prevState) {
@@ -481,4 +490,28 @@ export default class Publisher extends React.Component {
       console.log(error)
     }
   }
+  getStreamStats () {
+    R5StreamModule.getStreamStats(this.streamId, this.printStatsToFile)
+  }
+
+  printStatsToFile (stats) {
+    let content = `====================================================================\n${new Date().toUTCString()} | `
+    content += `Stream id: ${this.streamId}\n====================================================================`
+
+    Object.keys(stats).forEach(key => {
+      content += `\n${key}: ${stats[key]}`
+    })
+    content += '\n\n'
+
+    const filePath = RNFS.DocumentDirectoryPath + '/publisher-stats.txt'
+    
+    RNFS.appendFile(filePath, content, 'utf8')
+      .then((success) => {
+        console.log("Publisher: printStatsToFile() - Stats printed at " + filePath)
+      })
+      .catch((err) => {
+        console.log("Publisher: printStatsToFile() - Error - " + err.message)
+      })
+  }
+
 }

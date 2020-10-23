@@ -185,6 +185,7 @@ dependencies {
 
     implementation project(':react-native-permissions')
     implementation project(':react-native-vector-icons')
+    implementation project(':react-native-fs')
     implementation project(':react-native-red5pro')
 
     if (enableHermes) {

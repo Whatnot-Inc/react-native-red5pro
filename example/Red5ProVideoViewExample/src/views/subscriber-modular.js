@@ -22,6 +22,7 @@ import {
   setPlaybackVolume,
   attach, detach
 } from 'react-native-red5pro'
+import RNFS from 'react-native-fs'
 
 const isValidStatusMessage = (value) => {
   return value && typeof value !== 'undefined' && value !== 'undefined' && value !== 'null'
@@ -126,6 +127,8 @@ export default class Subscriber extends React.Component {
     this.doDetach = this.doDetach.bind(this)
     this.doSubscribe = this.doSubscribe.bind(this)
     this.doUnsubscribe = this.doUnsubscribe.bind(this)
+    this.getStreamStats = this.getStreamStats.bind(this)
+    this.printStatsToFile = this.printStatsToFile.bind(this)
 
     this.state = {
       appState: AppState.currentState,
@@ -136,6 +139,7 @@ export default class Subscriber extends React.Component {
       isDisconnected: true,
       attached: true,
       swappedLayout: false,
+      logIntervalId: null,
       buttonProps: {
         style: styles.button
       },
@@ -182,6 +186,9 @@ export default class Subscriber extends React.Component {
     this.emitter.addListener('onConfigured', this.onConfigured)
     this.emitter.addListener('onSubscriberStreamStatus', this.onSubscriberStreamStatus)
     this.emitter.addListener('onUnsubscribeNotification', this.onUnSubscribeNotification)
+
+    const intervalId = setInterval(this.getStreamStats, 5000)
+    this.setState({ logIntervalId: intervalId })
   }
 
   componentWillUnmount () {
@@ -193,6 +200,8 @@ export default class Subscriber extends React.Component {
     this.emitter.removeAllListeners('onConfigured')
     this.emitter.removeAllListeners('onSubscriberStreamStatus')
     this.emitter.removeAllListeners('onUnsubscribeNotification')
+
+    clearInterval(this.state.logIntervalId)
   }
 
   componentDidUpdate (prevProps, prevState) {
@@ -494,6 +503,30 @@ export default class Subscriber extends React.Component {
       })
       .catch(error => {
         console.log('Subscriber:Stream Unsubscribe Error - ' + error)
+      })
+  }
+
+  getStreamStats () {
+    R5StreamModule.getStreamStats(this.streamId, this.printStatsToFile)
+  }
+
+  printStatsToFile (stats) {
+    let content = `====================================================================\n${new Date().toUTCString()} | `
+    content += `Stream id: ${this.streamId}\n====================================================================`
+
+    Object.keys(stats).forEach(key => {
+      content += `\n${key}: ${stats[key]}`
+    })
+    content += '\n\n'
+
+    const filePath = RNFS.DocumentDirectoryPath + '/subscriber-stats.txt'
+
+    RNFS.appendFile(filePath, content, 'utf8')
+      .then((success) => {
+        console.log("Subscriber: printStatsToFile() - Stats printed at " + filePath)
+      })
+      .catch((err) => {
+        console.log("Subscriber: printStatsToFile() - Error - " + err.message)
       })
   }
 
