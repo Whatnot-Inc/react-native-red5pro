@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, Fragment } from 'react'
 import {
   SafeAreaView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
-  Switch
+  Switch,
+  TextInput
 } from 'react-native'
 import { Icon } from 'react-native-elements'
 import AsyncStorage from '@react-native-community/async-storage'
@@ -34,6 +35,18 @@ const styles = StyleSheet.create({
   },
   switchLabel: {
     fontSize: 15
+  },
+  loggingConfigContainer: {
+    paddingLeft: '25%'
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: 'grey',
+    width: 70,
+    height: 30,
+    padding: 0,
+    marginRight: 0,
+    textAlign: 'center'
   }
 })
 
@@ -42,8 +55,12 @@ export default function Settings(props) {
     autoFocusEnabled: false,
     autoReconnectEnabled: false,
     adaptiveBitrateEnabled: false,
-    doubleBitrateEnabled: false
+    doubleBitrateEnabled: false,
+    statsLogEnabled: false,
+    resetLogs: false,
+    logsInterval: 5000,
   })
+  const [intervalValue, setIntervalValue] = useState("")
 
   useEffect(() => {
     getData()
@@ -69,7 +86,8 @@ export default function Settings(props) {
 
       if (jsonData != null) {
         const parsedData = JSON.parse(jsonData)
-        setState(parsedData)
+        setState({...state, ...parsedData})
+        setIntervalValue(String(parsedData.logsInterval))
       }
 
     } catch (error) {
@@ -113,6 +131,34 @@ export default function Settings(props) {
     })
   }
 
+  const toggleStatsLogging = () => {
+    const newValue = !state.statsLogEnabled
+
+    setState({
+      ...state,
+      statsLogEnabled: newValue
+    })
+  }
+
+  const toggleResetLogs = () => {
+    const newValue = !state.resetLogs
+
+    setState({
+      ...state,
+      resetLogs: newValue
+    })
+  }
+
+  const onSubmitInterval = e => {
+    const parsedValue = parseInt(e.nativeEvent.text)
+    if (parsedValue && !isNaN(parsedValue)) {
+      setState({...state, logsInterval: parsedValue})
+    } else {
+      setState({...state, logsInterval: 5000})
+      setIntervalValue("5000")
+    }
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -137,7 +183,8 @@ export default function Settings(props) {
           <Text style={styles.switchLabel}>Enable auto-focus</Text>
           <Switch
             disabled
-            value={state.autoFocusEnabled}
+            value={false}
+            // value={state.autoFocusEnabled}
             onValueChange={toggleAutoFocus}
           />
         </View>
@@ -145,14 +192,14 @@ export default function Settings(props) {
           <Text style={styles.switchLabel}>Enable auto-reconnect</Text>
           <Switch
             disabled
-            value={state.autoReconnectEnabled}
+            value={false}
+            //value={state.autoReconnectEnabled}
             onValueChange={toggleAutoReconnect}
           />
         </View>
         <View style={styles.switchContainer}>
           <Text style={styles.switchLabel}>Enable adaptive bitrate</Text>
           <Switch
-            colo
             value={state.adaptiveBitrateEnabled}
             onValueChange={toggleAdaptiveBitrate}
           />
@@ -160,11 +207,42 @@ export default function Settings(props) {
         <View style={styles.switchContainer}>
           <Text style={styles.switchLabel}>Enable double bitrate (1500)</Text>
           <Switch
-            colo
             value={state.doubleBitrateEnabled}
             onValueChange={toggledoubleBitrate}
           />
         </View>
+        <View style={styles.switchContainer}>
+          <Text style={styles.switchLabel}>Enable stream logs</Text>
+          <Switch
+            value={state.statsLogEnabled}
+            onValueChange={toggleStatsLogging}
+          />
+        </View>
+        { 
+          state.statsLogEnabled &&
+          
+          <View style={styles.loggingConfigContainer}>
+            <View style={styles.switchContainer}>
+              <Text style={styles.switchLabel}>Log interval (ms)</Text>
+              <TextInput 
+                value={intervalValue}
+                keyboardType="numeric"
+                onChangeText={(text) => setIntervalValue(text)}
+                onEndEditing={onSubmitInterval}
+                enablesReturnKeyAutomatically
+                maxLength={5}
+                style={styles.input}
+              />
+            </View>
+            <View style={styles.switchContainer}>
+              <Text style={styles.switchLabel}>Always reset logs</Text>
+              <Switch
+                value={state.resetLogs}
+                onValueChange={toggleResetLogs}
+              />
+            </View>
+          </View>
+        }
       </View>
     </SafeAreaView>
   )

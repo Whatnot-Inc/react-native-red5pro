@@ -181,9 +181,17 @@ export default class Publisher extends React.Component {
     this.emitter.addListener('onConfigured', this.onConfigured)
     this.emitter.addListener('onPublisherStreamStatus', this.onPublisherStreamStatus)
     this.emitter.addListener('onUnpublishNotification', this.onUnpublishNotification)
-  
-    const intervalId = setInterval(this.getStreamStats, 5000)
-    this.setState({ logIntervalId: intervalId })
+    
+    if (settings.statsLogEnabled) {
+      if (settings.resetLogs) {
+        const filePath = RNFS.DocumentDirectoryPath + '/publisher-stats.txt'
+        RNFS.exists(filePath) && RNFS.unlink(filePath)
+          .then((success) => console.log("Publisher:Log file deleted"))
+          .catch((error) => console.log(error.message))
+      }
+      const intervalId = setInterval(this.getStreamStats, settings.logsInterval ?? 5000)
+      this.setState({ logIntervalId: intervalId })
+    }
   }
 
   componentWillUnmount () {
@@ -482,14 +490,12 @@ export default class Publisher extends React.Component {
   async getSettings() {
     try {
       const jsonData = await AsyncStorage.getItem('@settings')
-      console.log('setting en publisher-modular.js', jsonData)
-      const result = JSON.parse(jsonData);
-      console.log('result.adaptiveBitrateEnabled', result.adaptiveBitrateEnabled)
       return jsonData != null ? JSON.parse(jsonData) : null
     } catch (error) {
       console.log(error)
     }
   }
+
   getStreamStats () {
     R5StreamModule.getStreamStats(this.streamId, this.printStatsToFile)
   }

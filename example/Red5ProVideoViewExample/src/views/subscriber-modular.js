@@ -158,7 +158,7 @@ export default class Subscriber extends React.Component {
 
   }
 
-  componentDidMount () {
+  async componentDidMount () {
     console.log('Subscriber:componentWillMount()')
     AppState.addEventListener('change', this._handleAppStateChange)
 
@@ -187,8 +187,18 @@ export default class Subscriber extends React.Component {
     this.emitter.addListener('onSubscriberStreamStatus', this.onSubscriberStreamStatus)
     this.emitter.addListener('onUnsubscribeNotification', this.onUnSubscribeNotification)
 
-    const intervalId = setInterval(this.getStreamStats, 5000)
-    this.setState({ logIntervalId: intervalId })
+    const settings = await this.getSettings()
+
+    if (settings.statsLogEnabled) {
+      if (settings.resetLogs) {
+        const filePath = RNFS.DocumentDirectoryPath + '/subscriber-stats.txt'
+        RNFS.exists(filePath) && RNFS.unlink(filePath)
+          .then((success) => console.log("Subscriber:Log file deleted"))
+          .catch((error) => console.log(error.message))
+      }
+      const intervalId = setInterval(this.getStreamStats, settings.logsInterval ?? 5000)
+      this.setState({ logIntervalId: intervalId })
+    }
   }
 
   componentWillUnmount () {
@@ -504,6 +514,15 @@ export default class Subscriber extends React.Component {
       .catch(error => {
         console.log('Subscriber:Stream Unsubscribe Error - ' + error)
       })
+  }
+
+  async getSettings() {
+    try {
+      const jsonData = await AsyncStorage.getItem('@settings')
+      return jsonData != null ? JSON.parse(jsonData) : null
+    } catch (error) {
+      console.log(error)
+    }
   }
 
   getStreamStats () {
