@@ -356,7 +356,7 @@ export default class Subscriber extends React.Component {
     console.log(`Subscriber:onSubscriberStreamStatus :: ${JSON.stringify(status, null, 2)}`)
     let message = isValidStatusMessage(status.message) ? status.message : status.name
 
-    if (status.name.toLowerCase() === 'error' && this.settings.autoReconnectSubscriberEnabled) {
+    if (status.name.toLowerCase() === 'error' && this.settings?.autoReconnectSubscriberEnabled) {
       this.setState({isConnecting: true}, () => {
         this.startAutoReconnect()
         this.setState({isConnecting: false})
@@ -524,6 +524,7 @@ export default class Subscriber extends React.Component {
       return jsonData != null ? JSON.parse(jsonData) : null
     } catch (error) {
       console.log(error)
+      return null
     }
   }
 }
