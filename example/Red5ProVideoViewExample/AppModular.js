@@ -45,6 +45,8 @@ export default class App extends React.Component {
     this.onStreamNameChange = this.onStreamNameChange.bind(this)
     this.onEnableBackgroundStreamingChange = this.onEnableBackgroundStreamingChange.bind(this)
     this.onUseAuthenticationChange = this.onUseAuthenticationChange.bind(this)
+    this.onIsSpectator = this.onIsSpectator.bind(this)
+    this.onConnectSubscriber = this.onConnectSubscriber.bind(this)
     this.onUsernameChange = this.onUsernameChange.bind(this)
     this.onPasswordChange = this.onPasswordChange.bind(this)
     this.openSettings = this.openSettings.bind(this)
@@ -55,6 +57,9 @@ export default class App extends React.Component {
       hasPermissions: false,
       hasStarted: false,
       isPublisher: false,
+      isConference: true,
+      connectSubscriber: false,
+      isSpectator: false,
       useAuthentication: false,
       isInErrorState: false,
       settingsScreenOpened: false,
@@ -102,9 +107,30 @@ export default class App extends React.Component {
       streamProps: {
         collapsable: false,
         configuration: {
-          host: '',
-          licenseKey: '',
-          streamName: '',
+          host: 'hartwell-stream-manager.swrkstest.co',
+          licenseKey: 'F5SH-HV4H-WLQ9-3BPT',
+          streamName: 'test-juan-physical',
+          port: 8554,
+          contextName: 'live',
+          bufferTime: 0.5,
+          streamBufferTime: 2.0,
+          bundleID: 'com.red5pro.reactnative',
+          parameters: '',
+          key: Math.floor(Math.random() * 0x10000).toString(16),
+          autoAttachView: false
+        },
+        subscribeVideo: true,
+        showDebugView: true,
+        logLevel: R5LogLevel.DEBUG,
+        useBackfacingCamera: false,
+        enableBackgroundStreaming: false
+      },
+      streamPropsSub: {
+        collapsable: false,
+        configuration: {
+          host: 'hartwell-stream-manager.swrkstest.co',
+          licenseKey: 'F5SH-HV4H-WLQ9-3BPT',
+          streamName: 'test-juan-emulator',
           port: 8554,
           contextName: 'live',
           bufferTime: 0.5,
@@ -154,6 +180,7 @@ export default class App extends React.Component {
   render () {
     const {
       useAuthentication,
+      isSpectator,
       streamProps: {
         enableBackgroundStreaming
       }
@@ -166,7 +193,7 @@ export default class App extends React.Component {
     const assignPasswordRef = (password) => { this.password_field = password }
 
     if (this.state.hasPermissions && this.state.hasStarted) {
-      if (this.state.isPublisher) {
+      if (this.state.isPublisher && !this.state.isConference) {
         return (
           <Publisher
             streamProps={this.state.streamProps}
@@ -176,10 +203,53 @@ export default class App extends React.Component {
             clearReconnectTimer={this.clearReconnectTimer}
           />
         )
+      } else if (this.state.isPublisher && this.state.isConference) {
+        return (
+          <View style={styles.container}>
+              <Publisher
+                streamProps={this.state.streamPropsSub}
+                style={styles.container}
+                onStop={this.onStop}
+                onReconnect={this.onReconnect}
+                clearReconnectTimer={this.clearReconnectTimer}
+              />
+              { 
+                  <Subscriber
+                    streamProps={this.state.streamProps}
+                    style={styles.container}
+                    onStop={this.onStop}
+                    onReconnect={this.onReconnect}
+                    clearReconnectTimer={this.clearReconnectTimer}
+                  />
+              }
+          </View>
+        )
+      } else if (this.state.isSpectator) {
+        setTimeout( () => {this.onConnectSubscriber()}, 5000)
+        return (
+        <View style={styles.container}>
+              <Subscriber
+                streamProps={this.state.streamPropsSub}
+                style={styles.container}
+                onStop={this.onStop}
+                onReconnect={this.onReconnect}
+                clearReconnectTimer={this.clearReconnectTimer}
+              />
+              { this.state.connectSubscriber &&
+                <Subscriber
+                  streamProps={this.state.streamProps}
+                  style={styles.container}
+                  onStop={this.onStop}
+                  onReconnect={this.onReconnect}
+                  clearReconnectTimer={this.clearReconnectTimer}
+                />
+              }
+          </View>
+        )
       }
       else {
         return (
-          <Subscriber
+          <Publisher
             streamProps={this.state.streamProps}
             style={styles.container}
             onStop={this.onStop}
@@ -231,6 +301,12 @@ export default class App extends React.Component {
             <CheckBox title='Use Authentication'
               checked={useAuthentication}
               onPress={this.onUseAuthenticationChange}
+            />
+          </View>
+          <View style={styles.formField}>
+            <CheckBox title='Is Spectator'
+              checked={isSpectator}
+              onPress={this.onIsSpectator}
             />
           </View>
           { useAuthentication && <View>
@@ -320,9 +396,9 @@ export default class App extends React.Component {
 
   getStateFromProps () {
     const { useAuthentication } = this.state
-    const hostValue = this.host_field.props.value
-    const licenseValue = this.license_field.props.value
-    const streamNameValue = this.stream_name_field.props.value
+    const hostValue = '3.128.247.90'//this.host_field.props.value
+    const licenseValue = 'F5SH-HV4H-WLQ9-3BPT'//this.license_field.props.value
+    const streamNameValue = 'test-juan-physical'//this.stream_name_field.props.value
     const usernameValue = useAuthentication ? this.username_field.props.value : undefined
     const passwordValue = useAuthentication ? this.password_field.props.value : undefined
     return {
@@ -414,6 +490,20 @@ export default class App extends React.Component {
     const { useAuthentication } = this.state
     this.setState({
       useAuthentication: !useAuthentication
+    })
+  }
+
+  onIsSpectator () {
+    const { isSpectator } = this.state
+    this.setState({
+      isSpectator: !isSpectator
+    })
+  }
+
+  onConnectSubscriber () {
+    const { connectSubscriber } = this.state
+    this.setState({
+      connectSubscriber: true
     })
   }
 
